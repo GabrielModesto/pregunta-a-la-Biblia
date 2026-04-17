@@ -17,6 +17,8 @@ body {
   background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 h1, h2, .serif {
