@@ -44,7 +44,7 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: [...messages.map(m => ({
           role: m.role,
           parts: [{ text: m.text }]
@@ -63,11 +63,18 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
         text: modelText,
         groundingMetadata 
       }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in BibleChat:", error);
+      let errorMessage = "Hubo un problema al consultar la sabiduría bíblica. Por favor, intenta de nuevo en unos momentos.";
+      
+      // Handle quota error specifically
+      if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+        errorMessage = "El Maestro está atendiendo a muchas personas ahora mismo (límite de cuota). Por favor, espera unos segundos y vuelve a preguntar.";
+      }
+
       setMessages(prev => [...prev, { 
         role: 'model', 
-        text: "Hubo un problema al consultar la sabiduría bíblica. Por favor, intenta de nuevo en unos momentos." 
+        text: errorMessage
       }]);
     } finally {
       setIsLoading(false);
