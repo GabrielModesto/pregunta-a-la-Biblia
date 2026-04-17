@@ -43,52 +43,56 @@ interface TeachingsViewProps {
 
 export function TeachingsView({ onSelect }: TeachingsViewProps) {
   return (
-    <div className="h-full p-4 overflow-y-auto space-y-10">
-      <div className="space-y-2">
-        <h2 className="font-serif text-4xl font-bold text-olive">Piedras Angulares</h2>
-        <p className="text-sm text-muted-ink leading-relaxed max-w-lg">Encuentra sabiduría en las enseñanzas más profundas de Jesús para guiarnos en el día a día.</p>
+    <div className="h-full space-y-16 pb-32">
+      <div className="space-y-3">
+        <h2 className="font-serif text-5xl font-bold text-olive italic leading-tight">Piedras Angulares</h2>
+        <p className="text-lg text-muted-ink leading-relaxed max-w-md font-serif italic">Sabiduría profunda para iluminar tu camino diario.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-12">
         {TEACHINGS.map((item, idx) => (
           <button 
             key={idx}
             onClick={() => onSelect(`Cuéntame sobre la enseñanza de ${item.title} (${item.ref}) y qué consejos prácticos me da para mi vida actual.`)}
-            className="flex flex-col p-8 bg-white border border-olive/15 rounded-3xl hover:border-olive hover:shadow-2xl transition-all text-left group"
+            className="group flex flex-col text-left space-y-6"
           >
-            <div className={cn("p-4 rounded-2xl w-fit mb-5 transition-transform group-hover:scale-110 shadow-sm", item.color)}>
-              <item.icon className="w-6 h-6" />
+            <div className="flex items-center gap-6">
+              <div className={cn("p-5 rounded-[22px] shadow-sm transform transition-transform group-hover:scale-105 group-hover:shadow-md", item.color)}>
+                <item.icon className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-earth opacity-60">{item.theme}</p>
+                <h3 className="font-serif text-3xl font-bold text-olive">{item.title}</h3>
+              </div>
             </div>
-            <div className="space-y-1 mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-earth">{item.theme}</p>
-              <h3 className="font-serif text-2xl font-bold text-olive">{item.title}</h3>
-            </div>
-            <p className="text-sm text-muted-ink leading-relaxed flex-1">{item.desc}</p>
-            <div className="mt-6 pt-5 border-t border-olive/10 text-[10px] font-mono text-muted-ink opacity-60">
-              {item.ref}
+            <p className="text-lg text-muted-ink leading-relaxed font-serif italic pl-20">{item.desc}</p>
+            <div className="pl-20 flex items-center gap-2 text-[11px] font-bold text-muted-ink/40 uppercase tracking-widest">
+              <div className="w-4 h-px bg-olive/10" />
+              <span>{item.ref}</span>
             </div>
           </button>
         ))}
       </div>
 
-      <div className="bg-olive text-white p-10 rounded-3xl space-y-5 shadow-2xl shadow-olive/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-        <BookMarked className="w-10 h-10 opacity-40" />
-        <div className="space-y-2 relative z-10">
-          <h3 className="font-serif text-2xl font-bold">Inspiración Diaria</h3>
-          <p className="text-base font-serif italic opacity-90 leading-relaxed max-w-md">
-            "Lámpara es a mis pies tu palabra, y lumbrera a mi camino."
-          </p>
-          <p className="text-[10px] uppercase tracking-widest font-bold opacity-60">— Salmo 119:105</p>
+      <div className="relative group p-12 bg-white rounded-[40px] border border-olive/5 shadow-[0_20px_50px_rgba(0,0,0,0.03)] overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-olive/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+        <div className="space-y-6 relative z-10 text-center max-w-sm mx-auto">
+          <BookMarked className="w-10 h-10 text-olive mx-auto opacity-30" />
+          <div className="space-y-2">
+            <h3 className="font-serif text-2xl font-bold text-olive">Reflexión Diaria</h3>
+            <p className="text-xl font-serif italic text-muted-ink leading-relaxed">
+              "Lámpara es a mis pies tu palabra, y lumbrera a mi camino."
+            </p>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-olive/40">— Salmo 119:105</p>
+          </div>
+          <button 
+            onClick={() => onSelect("Dáme una reflexión bíblica para hoy basada en los Salmos.")}
+            className="w-full py-4 bg-olive text-white rounded-full text-xs font-bold uppercase tracking-widest shadow-xl shadow-olive/10 hover:bg-olive/90 transition-all active:scale-95"
+          >
+            Inspirame hoy
+          </button>
         </div>
-        <button 
-          onClick={() => onSelect("Dáme una reflexión bíblica para hoy basada en los Salmos.")}
-          className="relative z-10 px-8 py-3 bg-white text-olive rounded-xl text-sm font-bold shadow-xl hover:bg-paper transition-all active:scale-95"
-        >
-          Obtener reflexión
-        </button>
       </div>
     </div>
-
   );
 }

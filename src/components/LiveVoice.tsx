@@ -139,105 +139,91 @@ export function LiveVoice() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-8 max-w-2xl mx-auto space-y-12">
-      <div className="text-center space-y-4">
-        <h2 className="font-serif text-4xl font-bold text-olive">Preguntas a la Biblia Católica</h2>
-        <p className="text-muted-ink max-w-md mx-auto leading-relaxed">
-          Conversa con el Maestro por voz. Escucha reflexiones y enseñanzas de manera clara y natural.
-        </p>
+    <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-16 pb-32">
+      <div className="text-center space-y-3">
+        <h2 className="font-serif text-5xl font-bold text-olive italic leading-tight">Voz de Fe</h2>
+        <p className="text-lg text-muted-ink leading-relaxed max-w-xs mx-auto font-serif italic text-balance">Habla con el Maestro por voz. Escucha reflexiones y enseñanzas de manera clara.</p>
       </div>
 
-
-      <div className="relative">
-        {/* Visualizer Circle */}
-        <div className="relative w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
-          <AnimatePresence>
-            {isActive && (
+      <div className="relative flex items-center justify-center">
+        {/* Animated background rings */}
+        <AnimatePresence>
+          {isActive && (
+            <>
               <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: [1, 1.2, 1], opacity: 1 }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="absolute inset-0 bg-olive opacity-5 rounded-full"
+                initial={{ scale: 1, opacity: 0 }}
+                animate={{ scale: 2.2, opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                className="absolute inset-0 border-2 border-olive/10 rounded-full"
               />
-            )}
-          </AnimatePresence>
-          
+              <motion.div 
+                initial={{ scale: 1, opacity: 0 }}
+                animate={{ scale: 2.8, opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                className="absolute inset-0 border-2 border-olive/5 rounded-full"
+              />
+            </>
+          )}
+        </AnimatePresence>
+
+        <button
+          onClick={isActive ? stopLive : startLive}
+          disabled={status === 'connecting'}
+          className={cn(
+            "relative z-10 w-48 h-48 md:w-64 md:h-64 rounded-full flex flex-col items-center justify-center gap-4 transition-all duration-700 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]",
+            isActive 
+              ? "bg-olive text-white scale-105 shadow-olive/30" 
+              : "bg-white text-olive hover:shadow-olive/10 group"
+          )}
+        >
           <div className={cn(
-            "w-36 h-36 md:w-48 md:h-48 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl z-10",
-            isActive ? "bg-olive scale-105 md:scale-110 shadow-olive/20" : "bg-white border-2 border-olive/15 "
+            "p-6 rounded-3xl transition-all duration-500",
+            isActive ? "bg-white/20" : "bg-olive/5 group-hover:bg-olive/10"
           )}>
             {isActive ? (
-              <AudioLines className="w-12 h-12 md:w-16 md:h-16 text-white animate-pulse" />
+               <AudioLines className="w-8 h-8 md:w-12 md:h-12 animate-pulse" />
             ) : (
-              <Mic className="w-12 h-12 md:w-16 md:h-16 text-olive/40" />
+              <Mic className="w-8 h-8 md:w-12 md:h-12" />
             )}
           </div>
-        </div>
-
-        {/* Status Badge */}
-        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 px-5 py-2 bg-white border border-olive/15 rounded-full shadow-md flex items-center gap-2.5 whitespace-nowrap">
-          <div className={cn("w-2 h-2 rounded-full", 
-            status === 'active' ? "bg-green-500 animate-pulse" : 
-            status === 'connecting' ? "bg-amber-400" : 
-            status === 'error' ? "bg-red-500" : "bg-gray-300"
-          )} />
-          <span className="text-[10px] uppercase font-bold tracking-widest text-muted-ink">
-            {status === 'active' ? "En vivo" : 
-             status === 'connecting' ? "Conectando..." : 
-             status === 'error' ? "Error de conexión" : "Desconectado"}
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+            {isActive ? 'En vivo' : 'Pulsa para hablar'}
           </span>
-        </div>
+        </button>
       </div>
 
-      <div className="flex items-center gap-6">
-        {!isActive ? (
-          <button 
-            onClick={startLive}
-            className="flex items-center gap-3 px-10 py-4 bg-olive text-white rounded-2xl shadow-xl shadow-olive/10 hover:bg-olive/90 transform hover:-translate-y-1 transition-all font-bold"
-          >
-            <Mic className="w-5 h-5" />
-            Iniciar Conversación
-          </button>
-        ) : (
-          <>
-            <button 
-              onClick={() => setIsMuted(!isMuted)}
-              className={cn(
-                "p-4 rounded-xl shadow-sm transition-all border",
-                isMuted ? "bg-red-50 text-red-600 border-red-100" : "bg-white border-olive/15 text-olive"
-              )}
+      <div className="w-full max-w-sm">
+        <AnimatePresence mode="wait">
+          {isActive && transcription && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="p-8 bg-sidebar/50 backdrop-blur-sm border border-olive/5 rounded-[40px] text-center shadow-inner"
             >
-              {isMuted ? <MicOff /> : <Mic />}
-            </button>
-            <button 
-              onClick={stopLive}
-              className="px-10 py-4 bg-red-600 text-white rounded-2xl shadow-xl shadow-red-200 hover:bg-red-700 font-bold flex items-center gap-2"
-            >
-              <PhoneOff className="w-5 h-5" />
-              Finalizar
-            </button>
-          </>
+              <p className="text-xl font-serif italic text-olive leading-relaxed">
+                "{transcription.slice(-150)}"
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {!isActive && (
+          <div className="text-center space-y-4 opacity-40">
+            <div className="flex justify-center gap-1">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-olive/30" />
+              ))}
+            </div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-ink">Listo para conversar</p>
+          </div>
         )}
       </div>
 
-      {/* Transcription Preview */}
-      <AnimatePresence>
-        {status === 'active' && transcription && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full bg-sidebar p-5 rounded-2xl border border-olive/15 text-sm italic text-muted-ink text-center shadow-inner"
-          >
-            "{transcription.slice(-120)}..."
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex items-start gap-2.5 max-w-xs text-[11px] text-muted-ink opacity-60 italic text-center leading-relaxed">
-        <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-olive" />
-        <p>Asegúrate de estar en un lugar tranquilo. El Maestro te responderá con sabiduría en tiempo real.</p>
+      <div className="flex items-center gap-4 text-muted-ink text-[11px] font-bold uppercase tracking-widest opacity-40 italic">
+        <Info className="w-4 h-4" />
+        <span>Busca un lugar en paz</span>
       </div>
     </div>
-
   );
 }

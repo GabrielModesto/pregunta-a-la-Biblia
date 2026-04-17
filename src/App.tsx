@@ -20,118 +20,36 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-paper text-ink font-sans selection:bg-olive selection:text-white overflow-hidden">
-      {/* Sidebar / Mobile Nav */}
-      <div className="flex flex-col md:flex-row h-full overflow-hidden">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex md:w-[280px] bg-sidebar border-r border-olive/15 flex-col p-8 space-y-8 z-20 overflow-y-auto">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-olive p-2.5 rounded-xl shadow-sm">
-                <Book className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="font-serif text-2xl font-bold leading-none italic text-olive">Lumen</h1>
-                <p className="text-[10px] uppercase tracking-widest font-bold opacity-60 text-muted-ink">Bíblico Católico</p>
-              </div>
-            </div>
-          </div>
+    <div className="flex flex-col h-[100dvh] bg-paper text-ink font-sans selection:bg-olive selection:text-white overflow-hidden relative">
+      {/* Background decoration */}
+      <div className="absolute top-0 left-0 w-full h-[30dvh] bg-gradient-to-b from-sidebar to-transparent opacity-40 pointer-events-none" />
 
-          <nav className="flex-1 space-y-3">
-            <NavButton 
-              active={activeTab === 'chat'} 
-              onClick={() => setActiveTab('chat')}
-              icon={Book}
-              label="Inicio"
-              desc="Consulta la Palabra"
-            />
-            <NavButton 
-              active={activeTab === 'voice'} 
-              onClick={() => {
-                setActiveTab('voice');
-                setInitialPrompt(null);
-              }}
-              icon={Mic}
-              label="Voz en Vivo"
-              desc="Guía espiritual"
-            />
-            <NavButton 
-              active={activeTab === 'teachings'} 
-              onClick={() => setActiveTab('teachings')}
-              icon={Library}
-              label="Enseñanzas"
-              desc="Sabiduría y Parábolas"
-            />
-            
-            <div className="pt-4">
-              <button 
-                onClick={() => setIsSettingsOpen(true)}
-                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white text-muted-ink transition-all group"
-              >
-                <div className="p-2 rounded-lg bg-sidebar group-hover:bg-olive/10 transition-colors">
-                  <Settings className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="font-bold text-sm leading-none mb-1">Ajustes</p>
-                  <p className="text-[10px] opacity-70 font-medium">Configura la IA</p>
-                </div>
-              </button>
-            </div>
-          </nav>
-
-          <div className="pt-6 border-t border-olive/10 space-y-4">
-            <div className="flex items-center gap-3 p-3 bg-white/40 rounded-2xl border border-olive/5">
-              <div className="w-8 h-8 rounded-full bg-olive/10 flex items-center justify-center">
-                <User className="w-4 h-4 text-olive" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold truncate text-ink">Estudiante</p>
-                <p className="text-[9px] opacity-60 uppercase tracking-tighter text-muted-ink">Sesión activa</p>
-              </div>
-            </div>
-            <p className="text-[10px] text-muted-ink text-center italic opacity-70">
-              "La Verdad os hará libres."
-            </p>
-          </div>
-        </aside>
-
-        {/* Mobile Top Header */}
-        <header className="md:hidden flex items-center justify-between p-4 bg-sidebar border-b border-olive/15 z-20">
-          <div className="flex items-center gap-2">
-            <div className="bg-olive p-1.5 rounded-lg shadow-sm">
-              <Book className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="font-serif text-lg font-bold italic text-olive">Lumen</h1>
-          </div>
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 bg-olive/5 border border-olive/15 rounded-lg text-olive"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
-        </header>
-
-        {/* Main Content Area */}
-        <main className="flex-1 relative overflow-hidden flex flex-col pt-0 safe-top safe-bottom">
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col min-w-0 relative h-full">
+        {/* Dynamic Content Area */}
+        <main className="flex-1 flex flex-col relative overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="flex-1 h-full overflow-hidden flex flex-col"
+              className="flex-1 flex flex-col h-full overflow-hidden"
             >
-              <div className="flex-1 h-full w-full max-w-5xl mx-auto p-2 md:p-8 overflow-hidden flex flex-col">
+              <div className="flex-1 h-full w-full max-w-3xl mx-auto flex flex-col overflow-hidden px-4">
                 {activeTab === 'chat' && (
-                  <div className="flex-1 h-full flex flex-col overflow-hidden">
+                  <div className="flex-1 flex flex-col h-full overflow-hidden">
                      <BibleChat initialPrompt={initialPrompt} />
                   </div>
                 )}
-                <div className="flex-1 h-full overflow-y-auto">
+                
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
                   {activeTab === 'voice' && <LiveVoice />}
                   {activeTab === 'teachings' && (
-                    <TeachingsView onSelect={handleSelectTeaching} />
+                    <div className="mb-24 pt-6">
+                      <TeachingsView onSelect={handleSelectTeaching} />
+                    </div>
                   )}
                 </div>
               </div>
@@ -139,15 +57,15 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        {/* Mobile Bottom Navigation */}
-        <nav className="md:hidden flex items-center justify-around bg-sidebar border-t border-olive/15 p-2 safe-bottom z-30">
-          <MobileNavTab 
+        {/* Global Bottom Nav - The primary interaction hub */}
+        <nav className="flex items-center justify-around bg-sidebar/80 backdrop-blur-xl border-t border-olive/5 px-2 py-3 safe-bottom shrink-0 z-50 rounded-t-[32px] shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.05)]">
+          <MobileNavButton 
             active={activeTab === 'chat'} 
             onClick={() => setActiveTab('chat')} 
             icon={Book} 
-            label="Chat" 
+            label="Biblia" 
           />
-          <MobileNavTab 
+          <MobileNavButton 
             active={activeTab === 'voice'} 
             onClick={() => {
               setActiveTab('voice');
@@ -156,11 +74,17 @@ export default function App() {
             icon={Mic} 
             label="Voz" 
           />
-          <MobileNavTab 
+          <MobileNavButton 
             active={activeTab === 'teachings'} 
             onClick={() => setActiveTab('teachings')} 
             icon={Library} 
-            label="Enseñanzas" 
+            label="Lecciones" 
+          />
+          <MobileNavButton 
+            active={isSettingsOpen} 
+            onClick={() => setIsSettingsOpen(true)} 
+            icon={Settings} 
+            label="Ajustes" 
           />
         </nav>
       </div>
@@ -174,17 +98,57 @@ export default function App() {
   );
 }
 
-function MobileNavTab({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
+function NavButton({ active, onClick, icon: Icon, label, desc }: { 
+  active: boolean; 
+  onClick: () => void; 
+  icon: any; 
+  label: string;
+  desc: string;
+}) {
   return (
     <button 
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300",
-        active ? "text-olive bg-olive/5" : "text-muted-ink"
+        "w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 group",
+        active 
+          ? "bg-olive text-white shadow-xl shadow-olive/20" 
+          : "hover:bg-sidebar-accent text-muted-ink"
       )}
     >
-      <Icon className={cn("w-5 h-5 mb-1", active && "scale-110")} />
-      <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
+      <div className={cn(
+        "p-2.5 rounded-xl transition-colors",
+        active ? "bg-white/20" : "bg-sidebar border border-olive/5"
+      )}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="text-left">
+        <p className="font-bold text-sm leading-none mb-1">{label}</p>
+        <p className={cn("text-[10px] font-medium opacity-60", active ? "text-white" : "text-muted-ink")}>
+          {desc}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+function MobileNavButton({ active, onClick, icon: Icon, label }: { active: boolean, onClick: () => void, icon: any, label: string }) {
+  return (
+    <button 
+      onClick={onClick}
+      className={cn(
+        "flex-1 flex flex-col items-center justify-center py-2 transition-all active:scale-90",
+        active ? "text-olive" : "text-muted-ink/40"
+      )}
+    >
+      <div className={cn(
+        "p-2.5 rounded-2xl transition-all duration-500 mb-1 flex items-center justify-center",
+        active ? "bg-olive text-white shadow-xl shadow-olive/20" : "bg-transparent"
+      )}>
+        <Icon className={cn("w-5 h-5", active ? "scale-110" : "scale-100")} />
+      </div>
+      <span className="text-[9px] font-bold uppercase tracking-[0.1em]">
+        {label}
+      </span>
     </button>
   );
 }
@@ -238,37 +202,3 @@ function InstallPrompt() {
     </motion.div>
   );
 }
-
-function NavButton({ active, onClick, icon: Icon, label, desc }: { 
-  active: boolean; 
-  onClick: () => void; 
-  icon: any; 
-  label: string;
-  desc: string;
-}) {
-  return (
-    <button 
-      onClick={onClick}
-      className={cn(
-        "w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-300 text-left group",
-        active 
-          ? "bg-olive text-white shadow-lg shadow-olive/20" 
-          : "hover:bg-white text-muted-ink"
-      )}
-    >
-      <div className={cn(
-        "p-2 rounded-lg transition-colors",
-        active ? "bg-white/20" : "bg-sidebar group-hover:bg-olive/10"
-      )}>
-        <Icon className="w-5 h-5" />
-      </div>
-      <div>
-        <p className="font-bold text-sm leading-none mb-1">{label}</p>
-        <p className={cn("text-[10px] opacity-70 font-medium", active ? "text-white" : "text-muted-ink")}>
-          {desc}
-        </p>
-      </div>
-    </button>
-  );
-}
-
