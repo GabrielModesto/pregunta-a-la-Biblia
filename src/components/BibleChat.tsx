@@ -15,7 +15,8 @@ import {
   Instagram, 
   MessageCircle, 
   Check,
-  Copy
+  Copy,
+  Calendar
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -65,6 +66,26 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const handleDailyReadings = () => {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('es-ES', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric',
+      weekday: 'long'
+    });
+    
+    const prompt = `Por favor, muéstrame las lecturas de la misa de hoy, ${dateStr}, según el calendario litúrgico de la Iglesia Católica Romana. 
+    Incluye:
+    1. Primera Lectura (y segunda si corresponde).
+    2. Salmo Responsorial.
+    3. Evangelio del día.
+    
+    Para el Evangelio, incluye el texto (o un resumen fiel) y termina con una pequeña meditación personal que nos deje una enseñanza práctica para nuestra vida hoy.`;
+    
+    handleSend(prompt);
+  };
 
   const handleSend = async (customInput?: string) => {
     const textToSend = customInput || input;
@@ -199,12 +220,23 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
           </div>
         </div>
         
-        {provider === 'groq' && (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-earth/10 rounded-full border border-earth/20">
-            <Cpu className="w-3.5 h-3.5 text-earth" />
-            <span className="text-[10px] font-bold text-earth uppercase tracking-widest">{groqModel?.split('-')[0] || 'Groq'}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleDailyReadings}
+            disabled={isLoading}
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-olive/5 border border-olive/20 rounded-xl text-olive hover:bg-olive/10 transition-all font-bold text-[11px] uppercase tracking-wider group shadow-sm disabled:opacity-50"
+          >
+            <Calendar className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
+            <span>Lecturas de hoy</span>
+          </button>
+
+          {provider === 'groq' && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-earth/10 rounded-full border border-earth/20">
+              <Cpu className="w-3.5 h-3.5 text-earth" />
+              <span className="text-[10px] font-bold text-earth uppercase tracking-widest">{groqModel?.split('-')[0] || 'Groq'}</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
