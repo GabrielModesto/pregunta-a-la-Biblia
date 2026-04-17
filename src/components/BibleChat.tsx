@@ -323,27 +323,37 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
         )}
       </div>
 
-      {/* Input */}
+      {/* Input Area */}
       <div className="p-5 bg-sidebar border-t border-olive/15">
-        <div className="relative flex items-center">
-          <input 
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Escribe tu pregunta sobre la Biblia..."
-            className="w-full px-5 py-3.5 bg-white border border-olive/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-olive/10 font-sans text-sm shadow-inner placeholder:text-muted-ink/40"
-          />
+        <div className="flex gap-3 items-end">
+          <div className="flex-1 relative">
+            <textarea 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+              placeholder="Escribe tu pregunta sobre la Biblia..."
+              className="w-full px-5 py-4 bg-white border border-olive/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-olive/10 font-sans text-sm shadow-inner placeholder:text-muted-ink/40 resize-none overflow-y-auto min-h-[56px] max-h-48 transition-all"
+              rows={Math.min(5, input.split('\n').length || 1)}
+            />
+          </div>
           <button 
             onClick={() => handleSend()}
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 px-5 py-2 bg-olive text-white rounded-lg hover:bg-olive/90 disabled:opacity-50 transition-all font-bold text-sm shadow-md active:scale-95"
+            className="px-6 h-[56px] bg-olive text-white rounded-2xl hover:bg-olive/90 disabled:opacity-50 transition-all font-bold text-sm shadow-xl shadow-olive/10 active:scale-95 whitespace-nowrap flex items-center justify-center gap-2"
           >
-            Consultar
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            <span>Consultar</span>
           </button>
         </div>
+        <p className="mt-2 text-[9px] text-center text-muted-ink opacity-50 font-medium italic">
+          Presiona Enter para consultar, Shift + Enter para nueva línea.
+        </p>
       </div>
     </div>
-
   );
 }
