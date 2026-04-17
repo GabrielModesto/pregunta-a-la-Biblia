@@ -150,7 +150,7 @@ export function LiveVoice() {
 
       <div className="relative">
         {/* Visualizer Circle */}
-        <div className="relative w-64 h-64 flex items-center justify-center">
+        <div className="relative w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
           <AnimatePresence>
             {isActive && (
               <motion.div 
@@ -163,13 +163,13 @@ export function LiveVoice() {
           </AnimatePresence>
           
           <div className={cn(
-            "w-48 h-48 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl z-10",
-            isActive ? "bg-olive scale-110 shadow-olive/20" : "bg-white border-2 border-olive/15 "
+            "w-36 h-36 md:w-48 md:h-48 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl z-10",
+            isActive ? "bg-olive scale-105 md:scale-110 shadow-olive/20" : "bg-white border-2 border-olive/15 "
           )}>
             {isActive ? (
-              <AudioLines className="w-16 h-16 text-white animate-pulse" />
+              <AudioLines className="w-12 h-12 md:w-16 md:h-16 text-white animate-pulse" />
             ) : (
-              <Mic className="w-16 h-16 text-olive/40" />
+              <Mic className="w-12 h-12 md:w-16 md:h-16 text-olive/40" />
             )}
           </div>
         </div>

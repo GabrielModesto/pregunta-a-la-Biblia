@@ -207,27 +207,28 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
   ];
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto bg-white shadow-xl shadow-black/5 border border-olive/15 rounded-3xl overflow-hidden">
+    <div className="flex-1 flex flex-col h-full w-full bg-white shadow-xl shadow-black/5 border border-olive/15 rounded-3xl overflow-hidden min-h-0">
       {/* Header */}
-      <div className="p-5 border-b border-olive/15 bg-sidebar flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-2.5 bg-olive rounded-xl shadow-sm">
-            <BookOpen className="w-5 h-5 text-white" />
+      <div className="p-3 md:p-5 border-b border-olive/15 bg-sidebar flex items-center justify-between gap-4 flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-olive rounded-xl shadow-sm hidden sm:block">
+            <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-white" />
           </div>
           <div>
-            <h2 className="font-serif font-bold text-olive text-lg">Pregunta a la Palabra</h2>
-            <p className="text-[10px] text-muted-ink font-bold uppercase tracking-widest opacity-80">Explora las Sagradas Escrituras</p>
+            <h2 className="font-serif font-bold text-olive text-sm md:text-lg">Pregunta a la Palabra</h2>
+            <p className="text-[8px] md:text-[10px] text-muted-ink font-bold uppercase tracking-widest opacity-80">Sagradas Escrituras</p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button 
             onClick={handleDailyReadings}
             disabled={isLoading}
-            className="hidden md:flex items-center gap-2 px-4 py-2 bg-olive/5 border border-olive/20 rounded-xl text-olive hover:bg-olive/10 transition-all font-bold text-[11px] uppercase tracking-wider group shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-olive/5 border border-olive/20 rounded-xl text-olive hover:bg-olive/10 transition-all font-bold text-[9px] md:text-[11px] uppercase tracking-wider group shadow-sm disabled:opacity-50"
           >
-            <Calendar className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-            <span>Lecturas de hoy</span>
+            <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5 transition-transform group-hover:scale-110" />
+            <span className="hidden xs:inline">Lecturas</span>
+            <span className="hidden md:inline">de hoy</span>
           </button>
 
           {provider === 'groq' && (
@@ -369,7 +370,7 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
                 }
               }}
               placeholder="Escribe tu pregunta sobre la Biblia..."
-              className="w-full px-5 py-4 bg-white border border-olive/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-olive/10 font-sans text-sm shadow-inner placeholder:text-muted-ink/40 resize-none overflow-y-auto min-h-[56px] max-h-48 transition-all"
+              className="w-full px-5 py-4 bg-white border border-olive/20 rounded-2xl focus:outline-none focus:ring-2 focus:ring-olive/10 font-sans text-base md:text-sm shadow-inner placeholder:text-muted-ink/40 resize-none overflow-y-auto min-h-[56px] max-h-32 transition-all"
               rows={Math.min(5, input.split('\n').length || 1)}
             />
           </div>
