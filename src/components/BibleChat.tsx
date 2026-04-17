@@ -2,8 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ai, SYSTEM_PROMPT } from '../lib/gemini';
 import Groq from 'groq-sdk';
 import ReactMarkdown from 'react-markdown';
-import { Send, Loader2, BookOpen, Search, ExternalLink, Cpu } from 'lucide-react';
+import { 
+  Send, 
+  Loader2, 
+  BookOpen, 
+  Search, 
+  ExternalLink, 
+  Cpu, 
+  Share2, 
+  Twitter, 
+  Facebook, 
+  Instagram, 
+  MessageCircle, 
+  Check,
+  Copy
+} from 'lucide-react';
 import { cn } from '../lib/utils';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Message {
   role: 'user' | 'model' | 'assistant';
@@ -24,6 +39,8 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
   const [provider, setProvider] = useState<'gemini' | 'groq'>('gemini');
   const [groqKey, setGroqKey] = useState<string | null>(null);
   const [groqModel, setGroqModel] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [showShareFor, setShowShareFor] = useState<number | null>(null);
 
   const loadSettings = () => {
     setProvider((localStorage.getItem('llm_provider') as 'gemini' | 'groq') || 'gemini');
@@ -125,6 +142,49 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
     }
   };
 
+  const handleCopy = (text: string, id: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const shareActions = [
+    { 
+      name: 'WhatsApp', 
+      icon: MessageCircle, 
+      color: 'bg-[#25D366]',
+      action: (text: string) => window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+    },
+    { 
+      name: 'X', 
+      icon: Twitter, 
+      color: 'bg-black',
+      action: (text: string) => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank')
+    },
+    { 
+      name: 'Facebook', 
+      icon: Facebook, 
+      color: 'bg-[#1877F2]',
+      action: (text: string, id: number) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        alert("¡Texto copiado! Abre Facebook y pega tu meditación para compartirla.");
+        window.open('https://www.facebook.com/', '_blank');
+      }
+    },
+    { 
+      name: 'Instagram', 
+      icon: Instagram, 
+      color: 'bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]',
+      action: (text: string, id: number) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        alert("¡Texto copiado para Instagram! Compártelo en tus historias o publicaciones.");
+        window.open('https://www.instagram.com/', '_blank');
+      }
+    }
+  ];
+
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto bg-white shadow-xl shadow-black/5 border border-olive/15 rounded-3xl overflow-hidden">
       {/* Header */}
@@ -150,7 +210,7 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
       {/* Messages */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth bg-white"
+        className="flex-1 overflow-y-auto p-6 space-y-10 scroll-smooth bg-white"
       >
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center p-8 space-y-5">
@@ -168,13 +228,13 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
           <div 
             key={idx} 
             className={cn(
-              "flex flex-col max-w-[85%]",
+              "flex flex-col max-w-[90%]",
               message.role === 'user' ? "ml-auto items-end" : "items-start"
             )}
           >
             <div 
               className={cn(
-                "p-4 rounded-xl shadow-sm leading-relaxed",
+                "p-4 md:p-5 rounded-2xl shadow-sm leading-relaxed relative group",
                 message.role === 'user' 
                   ? "bg-[#eeeae4] text-ink rounded-tr-none border border-olive/5" 
                   : "bg-paper border border-olive/15 text-ink rounded-tl-none"
@@ -183,10 +243,57 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
               <div className="prose prose-sm max-w-none prose-stone">
                 <ReactMarkdown>{message.text}</ReactMarkdown>
               </div>
+
+              {message.role !== 'user' && (
+                <div className="absolute -bottom-8 left-0 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => handleCopy(message.text, idx)}
+                    className="p-1.5 bg-white border border-olive/10 rounded-lg text-olive hover:bg-paper transition-colors shadow-sm"
+                    title="Copiar texto"
+                  >
+                    {copiedId === idx ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                  <button 
+                    onClick={() => setShowShareFor(showShareFor === idx ? null : idx)}
+                    className={cn(
+                      "p-1.5 border rounded-lg transition-all shadow-sm flex items-center gap-2",
+                      showShareFor === idx ? "bg-olive text-white border-olive" : "bg-white border-olive/10 text-olive hover:bg-paper"
+                    )}
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    {showShareFor === idx && <span className="text-[10px] font-bold font-sans">Compartir</span>}
+                  </button>
+                </div>
+              )}
             </div>
             
+            <AnimatePresence>
+              {showShareFor === idx && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-10 flex flex-wrap gap-2 px-1"
+                >
+                  {shareActions.map((social) => (
+                    <button
+                      key={social.name}
+                      onClick={() => social.action(message.text, idx)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-white text-[10px] font-bold shadow-sm hover:scale-105 transition-transform active:scale-95",
+                        social.color
+                      )}
+                    >
+                      <social.icon className="w-3 h-3" />
+                      {social.name}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
             {message.groundingMetadata?.groundingChunks && (
-              <div className="mt-3 space-y-1.5 px-1">
+              <div className="mt-4 space-y-1.5 px-1">
                 <p className="text-[9px] font-bold text-muted-ink uppercase tracking-wider opacity-60">Fuentes Consultadas:</p>
                 <div className="flex flex-wrap gap-2">
                   {message.groundingMetadata.groundingChunks.map((chunk: any, i: number) => (
