@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ai, SYSTEM_PROMPT } from '../lib/gemini';
-import { GenerateContentResponse } from "@google/genai";
+import Groq from 'groq-sdk';
 import ReactMarkdown from 'react-markdown';
-import { Send, Loader2, BookOpen, Search, ExternalLink } from 'lucide-react';
+import { Send, Loader2, BookOpen, Search, ExternalLink, Cpu } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface Message {
-  role: 'user' | 'model';
+  role: 'user' | 'model' | 'assistant';
   text: string;
   groundingMetadata?: any;
 }
@@ -20,6 +20,22 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const [provider, setProvider] = useState<'gemini' | 'groq'>('gemini');
+  const [groqKey, setGroqKey] = useState<string | null>(null);
+  const [groqModel, setGroqModel] = useState<string | null>(null);
+
+  const loadSettings = () => {
+    setProvider((localStorage.getItem('llm_provider') as 'gemini' | 'groq') || 'gemini');
+    setGroqKey(localStorage.getItem('groq_api_key'));
+    setGroqModel(localStorage.getItem('groq_model'));
+  };
+
+  useEffect(() => {
+    loadSettings();
+    window.addEventListener('llm_settings_changed', loadSettings);
+    return () => window.removeEventListener('llm_settings_changed', loadSettings);
+  }, []);
 
   useEffect(() => {
     if (initialPrompt) {
@@ -43,32 +59,60 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
     setIsLoading(true);
 
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [...messages.map(m => ({
-          role: m.role,
-          parts: [{ text: m.text }]
-        })), { role: 'user', parts: [{ text: textToSend }] }],
-        config: {
-          systemInstruction: SYSTEM_PROMPT,
-          tools: [{ googleSearch: {} }],
-        },
-      });
+      if (provider === 'groq') {
+        if (!groqKey) {
+          throw new Error("GROQ_API_KEY_MISSING");
+        }
+        
+        const groq = new Groq({ apiKey: groqKey, dangerouslyAllowBrowser: true });
+        const chatCompletion = await groq.chat.completions.create({
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...messages.map(m => ({
+              role: m.role === 'model' ? 'assistant' as const : m.role as 'user' | 'assistant',
+              content: m.text
+            })),
+            { role: 'user', content: textToSend }
+          ],
+          model: groqModel || 'llama-3.3-70b-versatile',
+        });
 
-      const modelText = response.text || "Lo siento, no pude encontrar una respuesta clara en este momento.";
-      const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+        const modelText = chatCompletion.choices[0]?.message?.content || "No se recibió respuesta de Groq.";
+        
+        setMessages(prev => [...prev, { 
+          role: 'model', 
+          text: modelText
+        }]);
+      } else {
+        // Gemini
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: [...messages.map(m => ({
+            role: m.role === 'assistant' ? 'model' as const : (m.role as 'user' | 'model'),
+            parts: [{ text: m.text }]
+          })), { role: 'user', parts: [{ text: textToSend }] }],
+          config: {
+            systemInstruction: SYSTEM_PROMPT,
+            tools: [{ googleSearch: {} }],
+          },
+        });
 
-      setMessages(prev => [...prev, { 
-        role: 'model', 
-        text: modelText,
-        groundingMetadata 
-      }]);
+        const modelText = response.text || "Lo siento, no pude encontrar una respuesta clara en este momento.";
+        const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+
+        setMessages(prev => [...prev, { 
+          role: 'model', 
+          text: modelText,
+          groundingMetadata 
+        }]);
+      }
     } catch (error: any) {
       console.error("Error in BibleChat:", error);
       let errorMessage = "Hubo un problema al consultar la sabiduría bíblica. Por favor, intenta de nuevo en unos momentos.";
       
-      // Handle quota error specifically
-      if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+      if (error.message === "GROQ_API_KEY_MISSING") {
+        errorMessage = "Falta la API Key de Groq. Por favor, configúrala en el menú de Ajustes.";
+      } else if (error?.message?.includes('429') || error?.message?.includes('quota')) {
         errorMessage = "El Maestro está atendiendo a muchas personas ahora mismo (límite de cuota). Por favor, espera unos segundos y vuelve a preguntar.";
       }
 
@@ -84,14 +128,23 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto bg-white shadow-xl shadow-black/5 border border-olive/15 rounded-3xl overflow-hidden">
       {/* Header */}
-      <div className="p-5 border-b border-olive/15 bg-sidebar flex items-center gap-4">
-        <div className="p-2.5 bg-olive rounded-xl shadow-sm">
-          <BookOpen className="w-5 h-5 text-white" />
+      <div className="p-5 border-b border-olive/15 bg-sidebar flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="p-2.5 bg-olive rounded-xl shadow-sm">
+            <BookOpen className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="font-serif font-bold text-olive text-lg">Pregunta a la Palabra</h2>
+            <p className="text-[10px] text-muted-ink font-bold uppercase tracking-widest opacity-80">Explora las Sagradas Escrituras</p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-serif font-bold text-olive text-lg">Pregunta a la Palabra</h2>
-          <p className="text-[10px] text-muted-ink font-bold uppercase tracking-widest opacity-80">Explora las Sagradas Escrituras</p>
-        </div>
+        
+        {provider === 'groq' && (
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-earth/10 rounded-full border border-earth/20">
+            <Cpu className="w-3.5 h-3.5 text-earth" />
+            <span className="text-[10px] font-bold text-earth uppercase tracking-widest">{groqModel?.split('-')[0] || 'Groq'}</span>
+          </div>
+        )}
       </div>
 
       {/* Messages */}

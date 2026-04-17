@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { BibleChat } from './components/BibleChat';
 import { LiveVoice } from './components/LiveVoice';
 import { TeachingsView } from './components/TeachingsView';
-import { Book, Mic, Library, Info, Github, User } from 'lucide-react';
+import { SettingsModal } from './components/SettingsModal';
+import { Book, Mic, Library, Info, Github, User, Settings } from 'lucide-react';
 import { cn } from './lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -11,6 +12,7 @@ type Tab = 'chat' | 'voice' | 'teachings';
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleSelectTeaching = (prompt: string) => {
     setInitialPrompt(prompt);
@@ -22,13 +24,15 @@ export default function App() {
       {/* Sidebar / Mobile Nav */}
       <div className="flex flex-col md:flex-row h-full">
         <aside className="w-full md:w-[280px] bg-sidebar border-r border-olive/15 flex flex-col p-8 space-y-8 z-20">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-olive p-2.5 rounded-xl shadow-sm">
-              <Book className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="font-serif text-2xl font-bold leading-none italic text-olive">Lumen</h1>
-              <p className="text-[10px] uppercase tracking-widest font-bold opacity-60 text-muted-ink">Bíblico Católico</p>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-olive p-2.5 rounded-xl shadow-sm">
+                <Book className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="font-serif text-2xl font-bold leading-none italic text-olive">Lumen</h1>
+                <p className="text-[10px] uppercase tracking-widest font-bold opacity-60 text-muted-ink">Bíblico Católico</p>
+              </div>
             </div>
           </div>
 
@@ -57,7 +61,23 @@ export default function App() {
               label="Enseñanzas"
               desc="Sabiduría y Parábolas"
             />
+            
+            <div className="pt-4">
+              <button 
+                onClick={() => setIsSettingsOpen(true)}
+                className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white text-muted-ink transition-all group"
+              >
+                <div className="p-2 rounded-lg bg-sidebar group-hover:bg-olive/10 transition-colors">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm leading-none mb-1">Ajustes</p>
+                  <p className="text-[10px] opacity-70 font-medium">Configura la IA</p>
+                </div>
+              </button>
+            </div>
           </nav>
+
 
           <div className="pt-6 border-t border-olive/10 space-y-4">
             <div className="flex items-center gap-3 p-3 bg-white/40 rounded-2xl border border-olive/5">
@@ -109,6 +129,10 @@ export default function App() {
           <Info className="w-4 h-4" />
         </button>
       </div>
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </div>
   );
 }
