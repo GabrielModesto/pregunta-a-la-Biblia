@@ -266,13 +266,13 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
           >
             <div 
               className={cn(
-                "p-4 md:p-5 rounded-2xl shadow-sm leading-relaxed relative group break-words overflow-hidden",
+                "p-4 md:p-5 rounded-2xl shadow-sm relative group break-words min-w-0",
                 message.role === 'user' 
                   ? "bg-[#eeeae4] text-ink rounded-tr-none border border-olive/5" 
                   : "bg-paper border border-olive/15 text-ink rounded-tl-none"
               )}
             >
-              <div className="prose prose-sm max-w-none prose-stone break-words">
+              <div className="prose prose-sm max-w-none prose-stone break-words leading-relaxed text-ink">
                 <ReactMarkdown>{message.text}</ReactMarkdown>
               </div>
 

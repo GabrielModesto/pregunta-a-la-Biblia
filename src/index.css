@@ -19,6 +19,7 @@ body {
   font-family: var(--font-sans);
   overflow-wrap: break-word;
   word-wrap: break-word;
+  word-break: break-word;
 }
 
 h1, h2, .serif {
@@ -34,6 +35,8 @@ h1, h2, .serif {
     --tw-prose-links: var(--color-earth);
     --tw-prose-bold: var(--color-ink);
   }
+  .prose p:first-child { margin-top: 0; }
+  .prose p:last-child { margin-bottom: 0; }
 }
 
 

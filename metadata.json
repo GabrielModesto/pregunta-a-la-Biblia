@@ -1,6 +1,6 @@
 {
-  "name": "Bíblia Católica Maestro",
-  "description": "Aplicación para consultar la Biblia Católica, enseñanzas de Jesús y parábolas con voz e información actualizada.",
+  "name": "Lumen: Guía Bíblica Católica",
+  "description": "Una guía espiritual inteligente para explorar la Biblia Católica, enseñanzas de Jesús y reflexiones diarias.",
   "requestFramePermissions": ["microphone"],
   "majorCapabilities": []
 }
