@@ -44,7 +44,7 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.0-flash",
         contents: [...messages.map(m => ({
           role: m.role,
           parts: [{ text: m.text }]
@@ -55,7 +55,7 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
         },
       });
 
-      const modelText = response.text || "Lo siento, no pude procesar tu solicitud.";
+      const modelText = response.text || "Lo siento, no pude encontrar una respuesta clara en este momento.";
       const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
 
       setMessages(prev => [...prev, { 
@@ -64,10 +64,10 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
         groundingMetadata 
       }]);
     } catch (error) {
-      console.error(error);
+      console.error("Error in BibleChat:", error);
       setMessages(prev => [...prev, { 
         role: 'model', 
-        text: "Hubo un error al conectar con el Maestro. Por favor, intenta de nuevo." 
+        text: "Hubo un problema al consultar la sabiduría bíblica. Por favor, intenta de nuevo en unos momentos." 
       }]);
     } finally {
       setIsLoading(false);
