@@ -54,8 +54,11 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
     return () => window.removeEventListener('llm_settings_changed', loadSettings);
   }, []);
 
+  const lastProcessedPrompt = useRef<string | null>(null);
+
   useEffect(() => {
-    if (initialPrompt) {
+    if (initialPrompt && initialPrompt !== lastProcessedPrompt.current) {
+      lastProcessedPrompt.current = initialPrompt;
       handleSend(initialPrompt);
     }
   }, [initialPrompt]);
@@ -91,7 +94,9 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
     if (!textToSend.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', text: textToSend };
-    setMessages(prev => [...prev, userMessage]);
+    // Create new state reference locally to avoid stale state in the API call
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     if (!customInput) setInput('');
     setIsLoading(true);
 
@@ -104,25 +109,33 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
       }
       
       const groq = new Groq({ apiKey: currentGroqKey, dangerouslyAllowBrowser: true });
+      
+      // Build a clean alternating history for Groq
+      const conversationHistory = [];
+      let lastRole: 'user' | 'assistant' | null = null;
+
+      for (const m of updatedMessages) {
+        const groqRole = (m.role === 'model' || m.role === 'assistant') ? 'assistant' : 'user';
+        // Only add if it's a different role than the last one to maintain alternating order
+        if (groqRole !== lastRole) {
+          conversationHistory.push({ role: groqRole as 'user' | 'assistant', content: m.text });
+          lastRole = groqRole;
+        } else if (conversationHistory.length > 0) {
+          // If same role, append text to previous message of same role (not common but safer)
+          conversationHistory[conversationHistory.length - 1].content += "\n\n" + m.text;
+        }
+      }
+
       const chatCompletion = await groq.chat.completions.create({
         messages: [
-          { 
-            role: 'system', 
-            content: SYSTEM_PROMPT.includes("googleSearch") 
-              ? SYSTEM_PROMPT.split("Utiliza siempre la herramienta googleSearch")[0] + "Proporciona respuestas con profunda sabiduría bíblica y rigor teológico."
-              : SYSTEM_PROMPT 
-          },
-          ...messages.map(m => ({
-            role: (m.role === 'model' || m.role === 'assistant') ? 'assistant' as const : 'user' as const,
-            content: m.text
-          })),
-          { role: 'user', content: textToSend }
+          { role: 'system', content: SYSTEM_PROMPT },
+          ...conversationHistory
         ],
         model: currentModel,
         temperature: 0.7,
       });
 
-      const modelText = chatCompletion.choices?.[0]?.message?.content || "El modelo no devolvió ningún texto. Por favor, verifica tu cuota en Groq o prueba con otro modelo.";
+      const modelText = chatCompletion.choices?.[0]?.message?.content || "El modelo no devolvió ninguna sabiduría en esta ocasión.";
       
       setMessages(prev => [...prev, { 
         role: 'model', 
