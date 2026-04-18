@@ -111,7 +111,9 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
           messages: [
             { 
               role: 'system', 
-              content: SYSTEM_PROMPT.replace("Utiliza siempre la herramienta googleSearch para asegurar que las citas bíblicas y el contexto histórico sean precisos, especialmente para temas complejos o detalles específicos de los libros.", "Proporciona respuestas con profunda sabiduría bíblica y rigor teológico.") 
+              content: SYSTEM_PROMPT.includes("googleSearch") 
+                ? SYSTEM_PROMPT.split("Utiliza siempre la herramienta googleSearch")[0] + "Proporciona respuestas con profunda sabiduría bíblica y rigor teológico."
+                : SYSTEM_PROMPT 
             },
             ...messages.map(m => ({
               role: (m.role === 'model' || m.role === 'assistant') ? 'assistant' as const : 'user' as const,
@@ -121,10 +123,9 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
           ],
           model: currentModel,
           temperature: 0.7,
-          max_tokens: 2048,
         });
 
-        const modelText = chatCompletion.choices[0]?.message?.content || "No se recibió respuesta de Groq.";
+        const modelText = chatCompletion.choices?.[0]?.message?.content || "El modelo no devolvió ningún texto. Por favor, verifica tu cuota en Groq o prueba con otro modelo.";
         
         setMessages(prev => [...prev, { 
           role: 'model', 
@@ -154,13 +155,20 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
         }]);
       }
     } catch (error: any) {
-      console.error("Error in BibleChat:", error);
-      let errorMessage = "Hubo un problema al consultar la sabiduría bíblica. Por favor, intenta de nuevo en unos momentos.";
+      console.error("Error detallado de Groq:", error);
+      let errorMessage = "Hubo un problema al consultar la sabiduría bíblica.";
       
       if (error.message === "GROQ_API_KEY_MISSING") {
         errorMessage = "Falta la API Key de Groq. Por favor, configúrala en el menú de Ajustes.";
-      } else if (error?.message?.includes('429') || error?.message?.includes('quota')) {
-        errorMessage = "El Maestro está atendiendo a muchas personas ahora mismo (límite de cuota). Por favor, espera unos segundos y vuelve a preguntar.";
+      } else if (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('invalid_api_key')) {
+        errorMessage = "La API Key de Groq parece no ser válida. Revisa que esté correctamente escrita en Ajustes.";
+      } else if (error?.status === 404 || error?.message?.includes('404')) {
+        errorMessage = `El modelo seleccionado "${localStorage.getItem('groq_model')}" no fue encontrado. Prueba seleccionando uno diferente en Ajustes.`;
+      } else if (error?.message?.includes('429') || error?.message?.includes('quota') || error?.status === 429) {
+        errorMessage = "Se ha superado el límite de uso (cuota) de Groq. Por favor, espera un momento o revisa tu cuenta de Groq.";
+      } else {
+        // Exponemos un poco más de detalle si es posible
+        errorMessage += ` Detalle: ${error.message || 'Error desconocido'}`;
       }
 
       setMessages(prev => [...prev, { 
