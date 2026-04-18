@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ai, SYSTEM_PROMPT } from '../lib/gemini';
+import { SYSTEM_PROMPT } from '../lib/gemini';
 import Groq from 'groq-sdk';
 import ReactMarkdown from 'react-markdown';
 import { 
@@ -38,14 +38,12 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  const [provider, setProvider] = useState<'gemini' | 'groq'>('gemini');
-  const [groqKey, setGroqKey] = useState<string | null>(null);
-  const [groqModel, setGroqModel] = useState<string | null>(null);
+  const [groqKey, setGroqKey] = useState<string | null>(() => localStorage.getItem('groq_api_key'));
+  const [groqModel, setGroqModel] = useState<string | null>(() => localStorage.getItem('groq_model'));
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [showShareFor, setShowShareFor] = useState<number | null>(null);
 
   const loadSettings = () => {
-    setProvider((localStorage.getItem('llm_provider') as 'gemini' | 'groq') || 'gemini');
     setGroqKey(localStorage.getItem('groq_api_key'));
     setGroqModel(localStorage.getItem('groq_model'));
   };
@@ -98,77 +96,52 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
     setIsLoading(true);
 
     try {
-      if (provider === 'groq') {
-        const currentGroqKey = localStorage.getItem('groq_api_key')?.trim();
-        const currentModel = localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile';
-        
-        if (!currentGroqKey) {
-          throw new Error("GROQ_API_KEY_MISSING");
-        }
-        
-        const groq = new Groq({ apiKey: currentGroqKey, dangerouslyAllowBrowser: true });
-        const chatCompletion = await groq.chat.completions.create({
-          messages: [
-            { 
-              role: 'system', 
-              content: SYSTEM_PROMPT.includes("googleSearch") 
-                ? SYSTEM_PROMPT.split("Utiliza siempre la herramienta googleSearch")[0] + "Proporciona respuestas con profunda sabiduría bíblica y rigor teológico."
-                : SYSTEM_PROMPT 
-            },
-            ...messages.map(m => ({
-              role: (m.role === 'model' || m.role === 'assistant') ? 'assistant' as const : 'user' as const,
-              content: m.text
-            })),
-            { role: 'user', content: textToSend }
-          ],
-          model: currentModel,
-          temperature: 0.7,
-        });
-
-        const modelText = chatCompletion.choices?.[0]?.message?.content || "El modelo no devolvió ningún texto. Por favor, verifica tu cuota en Groq o prueba con otro modelo.";
-        
-        setMessages(prev => [...prev, { 
-          role: 'model', 
-          text: modelText
-        }]);
-      } else {
-        // Gemini
-        const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: [...messages.map(m => ({
-            role: m.role === 'assistant' ? 'model' as const : (m.role as 'user' | 'model'),
-            parts: [{ text: m.text }]
-          })), { role: 'user', parts: [{ text: textToSend }] }],
-          config: {
-            systemInstruction: SYSTEM_PROMPT,
-            tools: [{ googleSearch: {} }],
-          },
-        });
-
-        const modelText = response.text || "Lo siento, no pude encontrar una respuesta clara en este momento.";
-        const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
-
-        setMessages(prev => [...prev, { 
-          role: 'model', 
-          text: modelText,
-          groundingMetadata 
-        }]);
+      const currentGroqKey = localStorage.getItem('groq_api_key')?.trim();
+      const currentModel = localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile';
+      
+      if (!currentGroqKey) {
+        throw new Error("GROQ_API_KEY_MISSING");
       }
+      
+      const groq = new Groq({ apiKey: currentGroqKey, dangerouslyAllowBrowser: true });
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          { 
+            role: 'system', 
+            content: SYSTEM_PROMPT.includes("googleSearch") 
+              ? SYSTEM_PROMPT.split("Utiliza siempre la herramienta googleSearch")[0] + "Proporciona respuestas con profunda sabiduría bíblica y rigor teológico."
+              : SYSTEM_PROMPT 
+          },
+          ...messages.map(m => ({
+            role: (m.role === 'model' || m.role === 'assistant') ? 'assistant' as const : 'user' as const,
+            content: m.text
+          })),
+          { role: 'user', content: textToSend }
+        ],
+        model: currentModel,
+        temperature: 0.7,
+      });
+
+      const modelText = chatCompletion.choices?.[0]?.message?.content || "El modelo no devolvió ningún texto. Por favor, verifica tu cuota en Groq o prueba con otro modelo.";
+      
+      setMessages(prev => [...prev, { 
+        role: 'model', 
+        text: modelText
+      }]);
     } catch (error: any) {
-      console.error("Error detallado de Groq:", error);
+      console.error(`Error en LLM (Groq):`, error);
       let errorMessage = "Hubo un problema al consultar la sabiduría bíblica.";
       
       if (error.message === "GROQ_API_KEY_MISSING") {
         errorMessage = "Falta la API Key de Groq. Por favor, configúrala en el menú de Ajustes.";
       } else if (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('invalid_api_key')) {
-        errorMessage = "La API Key de Groq parece no ser válida. Revisa que esté correctamente escrita en Ajustes.";
+        errorMessage = "Groq: La clave de API no es válida o ha expirado.";
       } else if (error?.status === 404 || error?.message?.includes('404')) {
-        errorMessage = `El modelo seleccionado "${localStorage.getItem('groq_model')}" no fue encontrado. Prueba seleccionando uno diferente en Ajustes.`;
+        errorMessage = `El modelo seleccionado no fue encontrado o no tienes acceso en Groq.`;
       } else if (error?.message?.includes('429') || error?.message?.includes('quota') || error?.status === 429) {
-        errorMessage = "Se ha superado el límite de uso (cuota) de Groq. Por favor, espera un momento o revisa tu cuenta de Groq.";
+        errorMessage = "Límite de cuota alcanzado en Groq. Espera unos segundos.";
       } else {
-        // Exponemos un poco más de detalle si es posible
-        errorMessage += ` Detalle: ${error.message || 'Error desconocido'}`;
+        errorMessage += ` Detalle: ${error.message || 'Error de conexión'}`;
       }
 
       setMessages(prev => [...prev, { 
@@ -232,7 +205,12 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
             <div className="w-10 h-10 bg-olive rounded-full flex items-center justify-center shadow-lg shadow-olive/20">
               <Book className="w-5 h-5 text-white" />
             </div>
-            <h1 className="font-serif text-3xl font-bold tracking-tight text-olive italic">Lumen</h1>
+            <div>
+              <h1 className="font-serif text-3xl font-bold tracking-tight text-olive italic leading-tight">Lumen</h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-olive/40 leading-none">
+                Sabiduría Digital de Fe
+              </p>
+            </div>
           </div>
           
           <button 
