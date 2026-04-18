@@ -32,7 +32,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
   const handleSave = () => {
     localStorage.setItem('llm_provider', provider);
-    localStorage.setItem('groq_api_key', groqKey);
+    localStorage.setItem('groq_api_key', groqKey.trim());
     localStorage.setItem('groq_model', selectedModel);
     onClose();
     // Trigger a refresh of the app if needed, or just let components React-ively handle it via state/prop updates if we were passing them down.

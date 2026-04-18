@@ -99,21 +99,29 @@ export function BibleChat({ initialPrompt }: BibleChatProps) {
 
     try {
       if (provider === 'groq') {
-        if (!groqKey) {
+        const currentGroqKey = localStorage.getItem('groq_api_key')?.trim();
+        const currentModel = localStorage.getItem('groq_model') || 'llama-3.3-70b-versatile';
+        
+        if (!currentGroqKey) {
           throw new Error("GROQ_API_KEY_MISSING");
         }
         
-        const groq = new Groq({ apiKey: groqKey, dangerouslyAllowBrowser: true });
+        const groq = new Groq({ apiKey: currentGroqKey, dangerouslyAllowBrowser: true });
         const chatCompletion = await groq.chat.completions.create({
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
+            { 
+              role: 'system', 
+              content: SYSTEM_PROMPT.replace("Utiliza siempre la herramienta googleSearch para asegurar que las citas bíblicas y el contexto histórico sean precisos, especialmente para temas complejos o detalles específicos de los libros.", "Proporciona respuestas con profunda sabiduría bíblica y rigor teológico.") 
+            },
             ...messages.map(m => ({
-              role: m.role === 'model' ? 'assistant' as const : m.role as 'user' | 'assistant',
+              role: (m.role === 'model' || m.role === 'assistant') ? 'assistant' as const : 'user' as const,
               content: m.text
             })),
             { role: 'user', content: textToSend }
           ],
-          model: groqModel || 'llama-3.3-70b-versatile',
+          model: currentModel,
+          temperature: 0.7,
+          max_tokens: 2048,
         });
 
         const modelText = chatCompletion.choices[0]?.message?.content || "No se recibió respuesta de Groq.";
